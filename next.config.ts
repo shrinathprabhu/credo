@@ -128,18 +128,40 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Serving the root of the subdomain from inside the base path is done in
-  // vercel.json, because Next refuses a rewrite that crosses into its own
-  // basePath. This redirect is only a fallback for `next start` and any host
-  // that is not running those rules.
+  /**
+   * There is deliberately no redirect from "/" here. The rewrites in vercel.json
+   * serve the root of the subdomain from inside the base path instead.
+   *
+   * A redirect would loop. Next emits a relative Location, so "/" -> "/credo" on
+   * credo.lowkey.tools resolves against whatever host the visitor is actually on.
+   * Behind a prefix stripping proxy that is lowkey.tools/credo, which proxies
+   * straight back to the subdomain root, which redirects again. Redirects also
+   * run before rewrites on Vercel, so the redirect would win and the rewrite
+   * below would never fire.
+   *
+   * Legacy Credenstore paths are listed twice so they work whether the upstream
+   * proxy preserves the /credo prefix or strips it.
+   */
   async redirects() {
+    const legacy = [
+      ["/store", "/new"],
+      ["/retrieve", "/open"],
+      ["/retrieve/:id", "/s/:id"],
+      ["/terms-of-use", "/terms"],
+    ];
+
     return [
-      { source: "/", destination: basePath, basePath: false, permanent: false },
-      // Legacy Credenstore paths keep working if anyone still has them saved.
-      { source: "/store", destination: "/new", permanent: true },
-      { source: "/retrieve", destination: "/open", permanent: true },
-      { source: "/retrieve/:id", destination: "/s/:id", permanent: true },
-      { source: "/terms-of-use", destination: "/terms", permanent: true },
+      ...legacy.map(([source, destination]) => ({
+        source,
+        destination,
+        permanent: true,
+      })),
+      ...legacy.map(([source, destination]) => ({
+        source,
+        destination: `${basePath}${destination}`,
+        basePath: false as const,
+        permanent: true,
+      })),
     ];
   },
 };

@@ -200,14 +200,21 @@ So `credo.lowkey.tools/` and `credo.lowkey.tools/new` both work, while
 `/credo/_next/...`, `/credo/favicon.ico` and every other asset resolve natively. The
 negative lookahead is what stops `/credo/x` from being rewritten to `/credo/credo/x`.
 
-Note that `next start` does not read `vercel.json`, so locally the app is at
-`localhost:3000/credo` and bare paths 404. A redirect in `next.config.ts` sends `/` to
-`/credo` so the root still lands somewhere sensible off Vercel.
+There is deliberately **no redirect from `/`** in `next.config.ts`, and adding one back
+will break the site with `ERR_TOO_MANY_REDIRECTS`. Next emits a relative `Location`, so a
+`/` to `/credo` redirect on the subdomain resolves against whichever host the visitor is
+actually on. Behind a prefix stripping proxy that is `lowkey.tools/credo`, which proxies
+straight back to the subdomain root, which redirects again. Redirects also run before
+rewrites on Vercel, so the redirect would win and the rewrite above would never fire.
+
+Note that `next start` does not read `vercel.json`, so in local development the app is at
+`localhost:3000/credo` and bare paths 404. That is expected and does not happen on Vercel.
 
 ### Add this to the lowkey.tools project
 
-Either shape works, because the subdomain answers on both. Path preserving is the one to
-prefer, since it involves the fewest moving parts:
+Either shape works, because the subdomain answers on both. Path preserving has the fewest
+moving parts, since the request reaches the app without passing through the subdomain's
+own rewrites:
 
 ```json
 {
@@ -218,14 +225,28 @@ prefer, since it involves the fewest moving parts:
 }
 ```
 
+Prefix stripping also works:
+
+```json
+{
+  "rewrites": [
+    { "source": "/credo", "destination": "https://credo.lowkey.tools/" },
+    { "source": "/credo/:path*", "destination": "https://credo.lowkey.tools/:path*" }
+  ]
+}
+```
+
 Or, if lowkey.tools is itself a Next.js app, the same two entries belong in
 `next.config.ts` under `rewrites()`.
 
-Two things that will break it:
+Three things that will break it:
 
 1. **Rewrite, never redirect.** A redirect bounces visitors onto the subdomain and the
    canonical address stops being the one they see.
-2. **Do not add a trailing slash variant.** Next normalises those itself and returns a
+2. **Never redirect `/` to `/credo` inside the Credo app.** With a prefix stripping proxy
+   that is an infinite loop, and it presents as `ERR_TOO_MANY_REDIRECTS` on
+   `lowkey.tools/credo`. See the note above.
+3. **Do not add a trailing slash variant.** Next normalises those itself and returns a
    relative `Location`, so `lowkey.tools/credo/faq/` lands on `lowkey.tools/credo/faq`
    rather than leaking the subdomain into the address bar.
 

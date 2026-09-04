@@ -92,59 +92,68 @@
   --halo-b: rgb(154 146 255 / 0.12);
 }
 
-* {
-  border-color: var(--line);
-}
+@layer base {
+  * {
+    border-color: var(--line);
+  }
 
-html {
-  -webkit-text-size-adjust: 100%;
-  scroll-behavior: smooth;
-}
-
-@media (prefers-reduced-motion: reduce) {
   html {
-    scroll-behavior: auto;
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
   }
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
-}
 
-body {
-  background-color: var(--bg);
-  color: var(--ink);
-  font-family: var(--font-sans);
-  font-feature-settings: "cv02", "cv03", "cv04", "ss01";
-  -webkit-font-smoothing: antialiased;
-  min-height: 100dvh;
-}
+  body {
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "cv04", "ss01";
+    -webkit-font-smoothing: antialiased;
+    min-height: 100dvh;
+  }
 
-h1,
-h2,
-h3,
-h4 {
-  font-family: var(--font-display);
-  letter-spacing: -0.022em;
-  text-wrap: balance;
-}
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+  }
 
-p {
-  text-wrap: pretty;
-}
+  p {
+    text-wrap: pretty;
+  }
 
-::selection {
-  background: var(--brand);
-  color: var(--brand-ink);
-}
+  ::selection {
+    background: var(--brand);
+    color: var(--brand-ink);
+  }
 
-:focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: 2px;
-  border-radius: 4px;
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  /* Fields paint their own focus state on the element that owns the border, so
+     the generic ring would sit inside it and read as a second stray box. */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: none;
+  }
 }
 
 /* --------------------------------------------------------------- surfaces */
@@ -158,24 +167,35 @@ p {
   box-shadow: var(--glow);
 }
 
-/* The faint blueprint grid behind the hero and the vault screens. */
-.bg-grid {
-  background-image:
-    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 78%);
+/* The single focus treatment for form fields, applied to whichever element owns
+   the border. Written as a utility so the class name stays literal in the JSX
+   and Tailwind's scanner can actually see it. */
+@utility field-ring {
+  border-color: var(--brand);
+  background-color: var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent);
 }
 
-.halo {
-  position: absolute;
-  inset: -30% -10% auto;
-  height: 620px;
-  pointer-events: none;
-  background:
-    radial-gradient(38% 52% at 22% 30%, var(--halo-a), transparent 70%),
-    radial-gradient(34% 46% at 78% 20%, var(--halo-b), transparent 70%);
-  filter: blur(12px);
+@layer components {
+  /* The faint blueprint grid behind the hero and the vault screens. */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 78%);
+  }
+
+  .halo {
+    position: absolute;
+    inset: -30% -10% auto;
+    height: 620px;
+    pointer-events: none;
+    background:
+      radial-gradient(38% 52% at 22% 30%, var(--halo-a), transparent 70%),
+      radial-gradient(34% 46% at 78% 20%, var(--halo-b), transparent 70%);
+    filter: blur(12px);
+  }
 }
 
 /* ------------------------------------------------------------- animations */
@@ -242,51 +262,57 @@ p {
   }
 }
 
-.animate-rise {
-  animation: credo-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
+@layer components {
+  .animate-rise {
+    animation: credo-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
 
-.sweep::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--brand) 26%, transparent),
-    transparent
-  );
-  width: 34%;
-  animation: credo-sweep 1.6s linear infinite;
+  .sweep::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--brand) 26%, transparent),
+      transparent
+    );
+    width: 34%;
+    animation: credo-sweep 1.6s linear infinite;
+  }
 }
 
 /* --------------------------------------------------------------- controls */
-input[type="range"] {
-  accent-color: var(--brand);
-}
+@layer base {
+  input[type="range"] {
+    accent-color: var(--brand);
+  }
 
-textarea,
-input,
-select {
-  font-family: inherit;
-}
+  textarea,
+  input,
+  select {
+    font-family: inherit;
+  }
 
-/* Firefox and Safari both need this to stop autofill repainting the field. */
-input:-webkit-autofill,
-input:-webkit-autofill:focus {
-  -webkit-text-fill-color: var(--ink);
-  -webkit-box-shadow: 0 0 0 1000px var(--surface-2) inset;
-}
+  /* Chrome and Safari both need this to stop autofill repainting the field. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--ink);
+    -webkit-box-shadow: 0 0 0 1000px var(--surface-2) inset;
+  }
 
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--line-strong);
-  border-radius: 999px;
-  border: 3px solid var(--bg);
-}
-::-webkit-scrollbar-track {
-  background: transparent;
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--line-strong);
+    border-radius: 999px;
+    border: 3px solid var(--bg);
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
 }

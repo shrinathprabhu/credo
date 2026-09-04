@@ -21,8 +21,15 @@ export function Label({
   );
 }
 
+/**
+ * `field-ring` is defined in globals.css and carries the whole focus treatment.
+ * The generic :focus-visible outline is switched off for form controls there, so
+ * a focused field draws exactly one box on the element that owns the border.
+ * These strings stay literal because Tailwind only sees class names it can read
+ * in the source, never ones assembled at runtime.
+ */
 export const inputClass =
-  "w-full rounded-xl border border-[var(--line)] bg-surface-2 px-3.5 py-3 text-sm text-ink placeholder:text-ink-faint outline-none transition-colors focus:border-brand focus:bg-surface";
+  "w-full rounded-xl border border-[var(--line)] bg-surface-2 px-3.5 py-3 text-sm text-ink placeholder:text-ink-faint outline-none transition-[border-color,box-shadow,background-color] duration-150 focus:field-ring";
 
 export function FieldNote({
   tone = "muted",

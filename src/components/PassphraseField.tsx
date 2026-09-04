@@ -43,8 +43,10 @@ export function PassphraseField({
       </Label>
 
       <div
-        className={`flex items-center gap-1 rounded-xl border bg-surface-2 pr-1.5 pl-3.5 transition-colors focus-within:bg-surface ${
-          error ? "border-danger" : "border-[var(--line)] focus-within:border-brand"
+        className={`flex items-center gap-1 rounded-xl border bg-surface-2 pr-1.5 pl-3.5 transition-[border-color,box-shadow,background-color] duration-150 ${
+          error
+            ? "border-danger"
+            : "border-[var(--line)] focus-within:field-ring"
         }`}
       >
         <input
