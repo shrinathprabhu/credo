@@ -87,7 +87,7 @@ export default function HomePage() {
             <dl className="mt-10 grid max-w-lg grid-cols-2 gap-x-6 gap-y-4 border-t border-[var(--line)] pt-6 sm:grid-cols-4">
               {[
                 ["AES-256", "GCM sealed"],
-                ["600k", "PBKDF2 rounds"],
+                ["46 MiB", "Argon2id per guess"],
                 ["10 min", "shortest expiry"],
                 ["0", "accounts needed"],
               ].map(([value, label]) => (

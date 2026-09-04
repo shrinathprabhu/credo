@@ -13,6 +13,7 @@
     "test": "node --experimental-strip-types tests/crypto.test.mts && node --experimental-strip-types tests/expiry.test.mts"
   },
   "dependencies": {
+    "@noble/hashes": "^2.4.0",
     "firebase": "^12.18.0",
     "lucide-react": "^1.41.0",
     "nanoid": "^6.0.1",

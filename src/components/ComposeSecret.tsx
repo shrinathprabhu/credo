@@ -42,7 +42,7 @@ const STEP_LABELS = [
 ];
 
 const FLAVOURS = [
-  "600,000 rounds of key stretching. Worth the wait.",
+  "Argon2id is chewing through 46 MiB. That is the point.",
   "Shuffling bytes into something unreadable.",
   "The plaintext is staying right here in this tab.",
   "Building a box that only one passphrase opens.",

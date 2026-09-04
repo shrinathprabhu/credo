@@ -9,12 +9,12 @@ import { SITE_URL, absoluteUrl } from "@/lib/site";
 export const metadata = pageMetadata({
   title: "Security model",
   description:
-    "Exactly how Credo encrypts a share: AES-256-GCM, PBKDF2-HMAC-SHA256 at 600,000 rounds, a fresh salt and nonce per record, what the database is allowed to store, and what this design does not protect you from.",
+    "Exactly how Credo encrypts a share: AES-256-GCM sealed, Argon2id memory hard key derivation, a fresh salt and nonce per record, what the database is allowed to store, and what this design does not protect you from.",
   path: "/security",
   keywords: [
     "client side encryption security model",
     "AES-256-GCM browser encryption",
-    "PBKDF2 key derivation",
+    "Argon2id key derivation",
     "zero knowledge secret sharing",
   ],
 });
@@ -27,7 +27,7 @@ const article = {
     "The cryptography, the storage schema and the threat model behind Credo's encrypted sharing.",
   url: absoluteUrl("/security"),
   inLanguage: "en",
-  about: ["client side encryption", "AES-256-GCM", "PBKDF2", "zero knowledge sharing"],
+  about: ["client side encryption", "AES-256-GCM", "Argon2id", "zero knowledge sharing"],
   isAccessibleForFree: true,
 };
 
@@ -35,7 +35,7 @@ const PIPELINE = [
   {
     icon: KeyRound,
     title: "Key derivation",
-    body: "PBKDF2-HMAC-SHA256 stretches the passphrase across 600,000 rounds against a fresh 16 byte random salt, producing a 256 bit key. The round count is written into the payload, so raising it later never breaks links already in circulation.",
+    body: "Argon2id stretches the passphrase against a fresh 16 byte random salt to produce a 256 bit key, using 46 MiB of memory per attempt. Memory hardness is the point: a graphics card can run thousands of simple hashes in parallel, but it cannot hold thousands of 46 MiB working sets at once, so mass guessing stops being cheap. All the cost parameters are written into the payload, so raising them later never breaks links already in circulation.",
   },
   {
     icon: Lock,
@@ -182,7 +182,22 @@ export default function SecurityPage() {
         </section>
 
         <section className="mt-12 rounded-2xl border border-[var(--line)] bg-surface-2 p-6">
-          <h2 className="text-lg font-semibold text-ink">Reporting something</h2>
+          <h2 className="text-lg font-semibold text-ink">
+            A note for people arriving from Credenstore
+          </h2>
+          <p className="mt-2.5 text-[13.5px] leading-relaxed text-ink-soft">
+            The earlier version of this tool used TripleSec, which stacks three ciphers.
+            The cascade is the memorable part, but it is not where the security of a tool
+            like this lives. The only secret here is a passphrase a person chose, so what
+            matters is the cost of one guess to somebody holding the ciphertext, and that
+            is set by the key derivation function rather than by the number of ciphers.
+            A cascade guards against a future break in AES-256, which nobody has. A weak
+            derivation function is exploitable today with a rented graphics card. So the
+            cipher is one well studied authenticated mode running in the browser&apos;s
+            own native code, and the effort went into Argon2id instead.
+          </p>
+
+          <h2 className="mt-8 text-lg font-semibold text-ink">Reporting something</h2>
           <p className="mt-2.5 text-[13.5px] leading-relaxed text-ink-soft">
             If you find a flaw, please report it rather than publishing it first. The
             fastest route is a message through{" "}

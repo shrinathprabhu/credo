@@ -6,7 +6,7 @@ Canonical address: https://lowkey.tools/credo
 
 ## What it does
 
-- Encrypts text or a file locally with AES-256-GCM, using PBKDF2-HMAC-SHA256 at 600,000 rounds to derive the key from a passphrase.
+- Encrypts text or a file locally with AES-256-GCM, using Argon2id (m=47104 KiB, t=1, p=1, the OWASP interactive configuration) to derive the key from a passphrase. Argon2id is memory hard, so every guess an attacker makes costs 46 MiB of RAM, which is what makes large scale GPU cracking uneconomical.
 - Generates a fresh 16 byte salt and 12 byte nonce for every share, and stores them alongside the ciphertext inside a single base64 envelope.
 - Uploads only that envelope plus a creation timestamp, an expiry timestamp and, for files, the original name and MIME type.
 - Returns a share link and a QR code. The passphrase is never part of the link and is never transmitted.

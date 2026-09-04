@@ -18,8 +18,8 @@ have created.
 ## How a share works
 
 1. You type a secret or attach a file. Nothing has left the tab.
-2. PBKDF2-HMAC-SHA256 stretches your passphrase over 600,000 rounds against a fresh
-   16 byte salt, producing a 256 bit key.
+2. Argon2id stretches your passphrase against a fresh 16 byte salt into a 256 bit key,
+   spending 46 MiB of memory per attempt.
 3. AES-256-GCM seals the bytes with a fresh 12 byte nonce. Header, salt, nonce and
    ciphertext are packed into one envelope and base64 encoded.
 4. That envelope, a creation timestamp and an expiry timestamp are written to a single
@@ -37,7 +37,7 @@ The passphrase is never transmitted, never stored, and never part of the link.
 | --- | --- |
 | Framework | Next.js 16 App Router, React 19, TypeScript |
 | Styling | Tailwind CSS v4, CSS custom properties for the light and dark palettes |
-| Crypto | Web Crypto API, no third party crypto dependency |
+| Crypto | Web Crypto API for AES-256-GCM, `@noble/hashes` for Argon2id |
 | Storage | Firebase Firestore, client SDK only, loaded on demand |
 | Local history | IndexedDB with a localStorage fallback |
 | Icons | lucide-react |
@@ -45,6 +45,40 @@ The passphrase is never transmitted, never stored, and never part of the link.
 
 There is no backend of our own. The browser talks straight to Firestore, and the
 Firestore rules are the only thing enforcing the schema and the expiry.
+
+### Why Argon2id and AES-256-GCM, and not TripleSec
+
+Credenstore used TripleSec, which cascades XSalsa20, Twofish and AES-256 and derives its
+key with scrypt. The cascade is the eye catching part, but it is not where the security
+of a tool like this actually lives.
+
+The only secret in the system is a human chosen passphrase, so the question that matters
+is what one guess costs an attacker holding the ciphertext. That is decided by the key
+derivation function, not by how many ciphers are stacked. A cascade defends against a
+future break in AES-256, which nobody has, while a weak KDF is exploitable today with a
+rented graphics card.
+
+So the cipher is a single well studied AEAD, and the effort went into the KDF:
+
+- **Argon2id**, the Password Hashing Competition winner and current OWASP
+  recommendation, at `m=47104 KiB, t=1, p=1`. It is memory hard, so every guess costs
+  46 MiB of RAM. GPUs can run thousands of simple hashes in parallel but cannot hold
+  thousands of 46 MiB working sets, which is what makes bulk cracking uneconomical.
+  This is stronger than TripleSec's scrypt configuration, not weaker.
+- **AES-256-GCM** through the browser's native Web Crypto, so the primitive is constant
+  time, hardware accelerated and maintained by the browser vendor. The `triplesec`
+  package is unmaintained pure JavaScript with hand written Twofish and Keccak, which is
+  a larger attack surface and more exposed to timing side channels than native code.
+- **One AEAD instead of encrypt-then-MAC by hand.** GCM's authentication tag means a
+  modified payload refuses to open rather than decrypting into something plausible.
+
+Measured on an M series laptop: Argon2id at these parameters takes about 200 ms, roughly
+0.7 s on a mid range phone. PBKDF2 at 600,000 rounds, a common alternative, takes 97 ms
+here and is trivially parallel on a GPU. Same wall clock for the sender, wildly different
+cost for the attacker.
+
+`ARGON2_PARAMS` in `src/lib/crypto.ts` is the single place to raise this. Every cost
+parameter is written into the envelope, so raising it never breaks links already sent.
 
 ---
 

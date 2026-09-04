@@ -42,7 +42,7 @@ export const softwareApplication = {
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   featureList: [
     "AES-256-GCM encryption performed in the browser",
-    "PBKDF2-HMAC-SHA256 key stretching with 600,000 rounds",
+    "Argon2id memory hard key derivation, 46 MiB per attempt",
     "Share links that expire automatically",
     "Encrypted notes, passwords, API keys and small files",
     "QR code for every share link",

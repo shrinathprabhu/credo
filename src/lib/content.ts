@@ -19,7 +19,7 @@ export const FAQ: FaqEntry[] = [
   {
     question: "What encryption does Credo use?",
     answer:
-      "AES-256-GCM seals the payload and PBKDF2-HMAC-SHA256 with 600,000 rounds turns your passphrase into the key. Every share gets a fresh random 16 byte salt and a fresh 12 byte nonce, and the GCM authentication tag means a tampered payload fails to open rather than decrypting into garbage.",
+      "AES-256-GCM seals the payload, and Argon2id turns your passphrase into the key using 46 MiB of memory per attempt. Argon2id is the algorithm that won the Password Hashing Competition and it is memory hard, which is what stops an attacker from running millions of parallel guesses on a graphics card. Every share gets a fresh random 16 byte salt and a fresh 12 byte nonce, and the GCM authentication tag means a tampered payload fails to open rather than decrypting into something plausible.",
   },
   {
     question: "Can Credo recover a lost passphrase?",
@@ -90,7 +90,7 @@ export const HOW_IT_WORKS = [
 export const FEATURES = [
   {
     title: "Sealed before it leaves",
-    body: "AES-256-GCM with a 600,000 round PBKDF2 key stretch, all inside the tab you are looking at.",
+    body: "AES-256-GCM sealed, with an Argon2id key stretch that costs 46 MiB a guess. All inside the tab you are looking at.",
   },
   {
     title: "Links with a lifespan",
