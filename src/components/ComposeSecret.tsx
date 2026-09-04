@@ -18,7 +18,15 @@ import { Button } from "./ui/Button";
 import { FieldNote, Label, inputClass } from "./ui/Field";
 import { useToast } from "./ui/Toast";
 import { MAX_PAYLOAD_BYTES, isCryptoAvailable, seal } from "@/lib/crypto";
-import { PRESETS, UNIT_LIMITS, clampCustom, expiryDate, type ExpiryUnit, type PresetId } from "@/lib/expiry";
+import {
+  DEFAULT_PRESET,
+  PRESETS,
+  UNIT_LIMITS,
+  clampCustom,
+  expiryDate,
+  type ExpiryUnit,
+  type PresetId,
+} from "@/lib/expiry";
 import { formatBytes } from "@/lib/format";
 import { newShareId, sleep } from "@/lib/id";
 import { isConfigured } from "@/lib/firebase";
@@ -52,7 +60,7 @@ export function ComposeSecret() {
   const [dragging, setDragging] = useState(false);
   const [passphrase, setPassphrase] = useState("");
   const [label, setLabel] = useState("");
-  const [preset, setPreset] = useState<PresetId>("24h");
+  const [preset, setPreset] = useState<PresetId>(DEFAULT_PRESET);
   const [customAmount, setCustomAmount] = useState(3);
   const [customUnit, setCustomUnit] = useState<ExpiryUnit>("days");
 
@@ -357,7 +365,7 @@ export function ComposeSecret() {
 
         {/* --------------------------------------------------------- expiry */}
         <div className="mt-6">
-          <Label hint="Required, every share expires">
+          <Label hint="Nothing is kept past 30 days">
             <span className="inline-flex items-center gap-1.5">
               <Timer size={13} className="text-ink-faint" />
               Self destructs after

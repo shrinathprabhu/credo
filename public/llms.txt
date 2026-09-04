@@ -10,7 +10,7 @@ Canonical address: https://lowkey.tools/credo
 - Generates a fresh 16 byte salt and 12 byte nonce for every share, and stores them alongside the ciphertext inside a single base64 envelope.
 - Uploads only that envelope plus a creation timestamp, an expiry timestamp and, for files, the original name and MIME type.
 - Returns a share link and a QR code. The passphrase is never part of the link and is never transmitted.
-- Expires every share automatically, between ten minutes and thirty days after creation.
+- Expires every share automatically, between ten minutes and thirty days after creation. Thirty days is both the default and the maximum retention, and the ceiling is enforced when the record is written rather than only in the interface.
 - Keeps the sender's list of created links in their own browser using IndexedDB. There is no server side index and listing is blocked at the database level.
 
 ## What it deliberately does not do

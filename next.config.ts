@@ -1,13 +1,18 @@
 import type { NextConfig } from "next";
 
 /**
- * Credo is deployed to Vercel on credo.lowkey.tools but the canonical address
- * people use is lowkey.tools/credo. Serving the app under the /credo base path
- * on both hosts keeps every asset URL (/credo/_next/...) valid on either origin,
- * so lowkey.tools only needs a straight path preserving rewrite:
+ * Credo answers on two addresses.
  *
- *   { source: "/credo", destination: "https://credo.lowkey.tools/credo" }
- *   { source: "/credo/:path*", destination: "https://credo.lowkey.tools/credo/:path*" }
+ *   lowkey.tools/credo        the canonical one people use
+ *   credo.lowkey.tools/       the Vercel deployment, usable on its own
+ *
+ * Assets and links are emitted under /credo so the markup is valid on either
+ * origin without rewriting response bodies. The base path does that, because in
+ * the App Router the prefix is baked into prerendered hrefs and RSC payloads
+ * rather than resolved at runtime.
+ *
+ * The subdomain then rewrites its own root back into the base path, so pages are
+ * reachable at credo.lowkey.tools/ and credo.lowkey.tools/new as well.
  */
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "/credo";
 const isProd = process.env.NODE_ENV === "production";
@@ -123,9 +128,12 @@ const nextConfig: NextConfig = {
     ];
   },
 
+  // Serving the root of the subdomain from inside the base path is done in
+  // vercel.json, because Next refuses a rewrite that crosses into its own
+  // basePath. This redirect is only a fallback for `next start` and any host
+  // that is not running those rules.
   async redirects() {
     return [
-      // Bare credo.lowkey.tools lands on the app instead of a 404.
       { source: "/", destination: basePath, basePath: false, permanent: false },
       // Legacy Credenstore paths keep working if anyone still has them saved.
       { source: "/store", destination: "/new", permanent: true },

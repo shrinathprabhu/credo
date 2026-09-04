@@ -1,6 +1,14 @@
 import { Compass } from "lucide-react";
+import type { Metadata } from "next";
 import { ButtonLink } from "@/components/ui/Button";
 import { Shell } from "@/components/PageHeader";
+
+export const metadata: Metadata = {
+  title: "Page not found",
+  // Without this the root layout's index directive is emitted alongside the
+  // noindex Next adds for a 404, which is two answers to the same question.
+  robots: { index: false, follow: true },
+};
 
 export default function NotFound() {
   return (

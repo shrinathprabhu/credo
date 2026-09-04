@@ -31,7 +31,7 @@ const SECTIONS = [
   },
   {
     title: "Retention",
-    body: "Every record has an expiry between ten minutes and thirty days. After that moment the database refuses to serve it and a scheduled cleanup deletes it. Records cannot be edited after they are written.",
+    body: "Every record has an expiry between ten minutes and thirty days, defaulting to thirty. Nothing is retained beyond that ceiling. After the moment passes the database refuses to serve the record and a scheduled cleanup deletes it. Records cannot be edited after they are written.",
   },
   {
     title: "Third parties",

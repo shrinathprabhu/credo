@@ -7,6 +7,7 @@
  * the written object in exact agreement with firestore.rules: any extra key
  * makes the whole write bounce back as permission-denied.
  */
+import { MAX_RETENTION_MS } from "./expiry";
 import { getDb, NotConfiguredError } from "./firebase";
 
 export type FileMeta = { name: string; type: string };
@@ -64,10 +65,20 @@ export async function createSecret({
   const db = await getDb();
   const { doc, setDoc, Timestamp } = await import("firebase/firestore");
 
+  const now = Date.now();
+  // The retention policy is enforced here as well as in the picker, so no caller
+  // can write a record that outlives it.
+  const expiry = new Date(Math.min(expiresAt.getTime(), now + MAX_RETENTION_MS));
+  if (expiry.getTime() <= now) {
+    throw new UploadRejectedError(
+      "That expiry has already passed, so the share would be unreadable the moment it was written.",
+    );
+  }
+
   const payload: Record<string, unknown> = {
     encrypted_data: encryptedData,
-    created_at: Timestamp.fromDate(new Date()),
-    expires_at: Timestamp.fromDate(expiresAt),
+    created_at: Timestamp.fromDate(new Date(now)),
+    expires_at: Timestamp.fromDate(expiry),
   };
 
   if (file) {

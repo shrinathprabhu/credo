@@ -50,7 +50,7 @@ const PIPELINE = [
   {
     icon: Timer,
     title: "Storage and expiry",
-    body: "The envelope is written to a single database record along with a creation time and an expiry time. Reads are refused once the expiry passes, and a scheduled cleanup deletes the record.",
+    body: "The envelope is written to a single database record along with a creation time and an expiry time. Every share has one, thirty days by default and thirty days at most, and the ceiling is applied in the write path as well as in the picker. Reads are refused once the expiry passes, and a scheduled cleanup deletes the record.",
   },
 ];
 

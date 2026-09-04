@@ -29,7 +29,7 @@ export const FAQ: FaqEntry[] = [
   {
     question: "How long does a Credo link stay alive?",
     answer:
-      "You choose, from ten minutes up to thirty days, and every share must have an expiry. Once the moment passes the database refuses to serve the record and a scheduled cleanup deletes it.",
+      "You choose, from ten minutes up to thirty days. Thirty days is both the default and the ceiling, because nothing is retained beyond that. Once the moment passes the database refuses to serve the record and a scheduled cleanup deletes it.",
   },
   {
     question: "Can I send a file with Credo?",
@@ -94,7 +94,7 @@ export const FEATURES = [
   },
   {
     title: "Links with a lifespan",
-    body: "Every share carries an expiry, from ten minutes to thirty days. Nothing lingers by accident.",
+    body: "Every share carries an expiry, from ten minutes to thirty days. Thirty days is the ceiling, so nothing lingers by accident.",
   },
   {
     title: "Notes or files",

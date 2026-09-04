@@ -66,7 +66,7 @@ default. See [Routing](#routing-and-the-two-hostnames) for why.
 | `npm start` | Serve the production build |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | TypeScript, no emit |
-| `npm test` | Encryption round trip tests, including tamper and wrong passphrase cases |
+| `npm test` | Encryption round trips, tamper and wrong passphrase cases, and the expiry ceiling |
 | `npm run assets` | Regenerate favicons, PWA icons and the social image from the SVG sources |
 
 ---
@@ -112,6 +112,11 @@ clear banner saying no vault is attached, and refuses to pretend a share was sto
      --project=YOUR_PROJECT_ID
    ```
 
+Retention is capped at thirty days. `src/lib/expiry.ts` holds the ceiling, the preset
+list and the custom control all resolve against it, an unset or unrecognised selection
+becomes exactly thirty days, and `createSecret` clamps again before writing so no caller
+can outlive the policy. `npm test` covers those cases.
+
 The rules allow exactly five fields and nothing else, so the write path in
 `src/lib/store.ts` has to stay in lockstep with them. Any extra key comes back as
 `permission-denied` for the whole document.
@@ -120,7 +125,7 @@ The rules allow exactly five fields and nothing else, so the write path in
 | --- | --- | --- |
 | `encrypted_data` | non empty string | always |
 | `created_at` | timestamp | always |
-| `expires_at` | timestamp | always, which is why every share must expire |
+| `expires_at` | timestamp | always, which is why every share must expire. Thirty days by default and thirty days at most |
 | `file` | boolean | only for file shares |
 | `metadata` | map with exactly `name` and `type` | only when `file` is true |
 
@@ -132,22 +137,43 @@ in the browser instead of on the server.
 
 ## Routing and the two hostnames
 
-Credo is deployed to Vercel on **credo.lowkey.tools** but people use it at
-**lowkey.tools/credo**. To keep one set of asset URLs valid on both, the app is served
-under the `/credo` base path on *both* hosts. Every script, style, icon and link is
-therefore `/credo/...` no matter which host answered.
+Credo answers on two addresses:
 
-What that means in practice:
+| Address | What it is |
+| --- | --- |
+| `lowkey.tools/credo` | the canonical one, what links and QR codes point at |
+| `credo.lowkey.tools` | the Vercel deployment, fully usable on its own at the root |
 
-- `credo.lowkey.tools/credo/...` serves the app. Bare `credo.lowkey.tools/` redirects
-  to `/credo`.
-- `lowkey.tools/credo/...` proxies straight through with the path untouched.
-- Canonical tags, the sitemap and `llms.txt` all point at `lowkey.tools/credo`, so the
-  subdomain never competes with it in search results.
+Links, assets and metadata routes are all emitted under `/credo`, which is what the
+`basePath` in `next.config.ts` does. That matters more here than it would in a Vite app:
+in the App Router the prefix is baked into prerendered `href`s and into the `.rsc`
+payloads the client router uses for navigation, so it cannot be reinterpreted at runtime
+the way a router `basename` can. One prefix in the markup is what lets the same response
+be correct on either host without rewriting response bodies.
+
+`vercel.json` then serves the app from the root of its own subdomain:
+
+```json
+{
+  "rewrites": [
+    { "source": "/", "destination": "/credo" },
+    { "source": "/:path((?!credo$|credo/).*)", "destination": "/credo/:path" }
+  ]
+}
+```
+
+So `credo.lowkey.tools/` and `credo.lowkey.tools/new` both work, while
+`/credo/_next/...`, `/credo/favicon.ico` and every other asset resolve natively. The
+negative lookahead is what stops `/credo/x` from being rewritten to `/credo/credo/x`.
+
+Note that `next start` does not read `vercel.json`, so locally the app is at
+`localhost:3000/credo` and bare paths 404. A redirect in `next.config.ts` sends `/` to
+`/credo` so the root still lands somewhere sensible off Vercel.
 
 ### Add this to the lowkey.tools project
 
-Path preserving rewrites, no prefix stripping:
+Either shape works, because the subdomain answers on both. Path preserving is the one to
+prefer, since it involves the fewest moving parts:
 
 ```json
 {
@@ -158,24 +184,28 @@ Path preserving rewrites, no prefix stripping:
 }
 ```
 
-Or, if lowkey.tools is itself a Next.js app:
+Or, if lowkey.tools is itself a Next.js app, the same two entries belong in
+`next.config.ts` under `rewrites()`.
 
-```ts
-async rewrites() {
-  return [
-    { source: "/credo", destination: "https://credo.lowkey.tools/credo" },
-    { source: "/credo/:path*", destination: "https://credo.lowkey.tools/credo/:path*" },
-  ];
-}
+Two things that will break it:
+
+1. **Rewrite, never redirect.** A redirect bounces visitors onto the subdomain and the
+   canonical address stops being the one they see.
+2. **Do not add a trailing slash variant.** Next normalises those itself and returns a
+   relative `Location`, so `lowkey.tools/credo/faq/` lands on `lowkey.tools/credo/faq`
+   rather than leaking the subdomain into the address bar.
+
+### If you ever want the subdomain to be primary
+
+The prefix is a deploy time decision, not something baked into the source:
+
+```bash
+NEXT_PUBLIC_BASE_PATH=""
+NEXT_PUBLIC_SITE_ORIGIN="https://credo.lowkey.tools"
 ```
 
-Two things that will break it if you get them wrong:
-
-1. **Do not strip the prefix.** Rewriting `/credo/:path*` to
-   `https://credo.lowkey.tools/:path*` sends requests to a path the app does not serve,
-   and every asset URL in the returned HTML will still say `/credo/...` anyway.
-2. **Do not use a redirect.** A redirect would bounce visitors onto the subdomain and
-   the canonical address stops being the one people see.
+The app then serves cleanly at the subdomain root with correct links, canonical tags and
+share URLs, and the `vercel.json` rewrites can be dropped.
 
 ### robots.txt
 
@@ -248,6 +278,7 @@ src/
   components/     UI, including the loader, the QR card and the two main flows
   lib/
     crypto.ts     seal and open, the whole cryptography surface
+    expiry.ts     presets, the custom control and the thirty day ceiling
     store.ts      the only two Firestore calls, matched to firestore.rules
     vault.ts      the browser local history of created links
     passphrase.ts strength scoring and generation
@@ -259,6 +290,7 @@ scripts/
   generate-assets.mjs   renders every binary asset from the SVG sources
 tests/
   crypto.test.mts       round trip, tamper and wrong passphrase coverage
+  expiry.test.mts       defaults and clamping against the retention ceiling
 ```
 
 ---

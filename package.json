@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "assets": "node scripts/generate-assets.mjs",
-    "test": "node --experimental-strip-types tests/crypto.test.mts"
+    "test": "node --experimental-strip-types tests/crypto.test.mts && node --experimental-strip-types tests/expiry.test.mts"
   },
   "dependencies": {
     "firebase": "^12.18.0",
