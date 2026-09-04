@@ -1,0 +1,36 @@
+# Credo
+
+> Credo is a free, account free web app for handing someone a password, an API key, a private note or a small file. The browser encrypts the payload with AES-256-GCM before anything is uploaded, so the stored record is ciphertext only. The recipient needs both the link and the passphrase, and every link expires on a schedule the sender picks.
+
+Canonical address: https://lowkey.tools/credo
+
+## What it does
+
+- Encrypts text or a file locally with AES-256-GCM, using PBKDF2-HMAC-SHA256 at 600,000 rounds to derive the key from a passphrase.
+- Generates a fresh 16 byte salt and 12 byte nonce for every share, and stores them alongside the ciphertext inside a single base64 envelope.
+- Uploads only that envelope plus a creation timestamp, an expiry timestamp and, for files, the original name and MIME type.
+- Returns a share link and a QR code. The passphrase is never part of the link and is never transmitted.
+- Expires every share automatically, between ten minutes and thirty days after creation.
+- Keeps the sender's list of created links in their own browser using IndexedDB. There is no server side index and listing is blocked at the database level.
+
+## What it deliberately does not do
+
+- It does not store, transmit or recover passphrases. A lost passphrase means the ciphertext stays sealed permanently.
+- It does not require an account, an email address or any sign in.
+- It does not run analytics on the contents of a share.
+- It is not built for large files. The practical ceiling is about 700 KB per share.
+
+## Pages
+
+- [Home](https://lowkey.tools/credo): what Credo is, how it works, and the full feature list.
+- [Share a secret](https://lowkey.tools/credo/new): compose a note or attach a file, set a passphrase and an expiry, get a link and a QR code.
+- [Open a secret](https://lowkey.tools/credo/open): enter a share id and passphrase to decrypt.
+- [My links](https://lowkey.tools/credo/links): the local, browser only history of links you created, with copy buttons and QR codes.
+- [Security model](https://lowkey.tools/credo/security): the exact cryptography, the threat model and the trade offs.
+- [Questions](https://lowkey.tools/credo/faq): direct answers to the questions people actually ask.
+- [Terms of use](https://lowkey.tools/credo/terms)
+- [Privacy](https://lowkey.tools/credo/privacy)
+
+## Attribution
+
+Built by Shrinath Prabhu (https://shrinath.me), who also works on Owleye analytics (https://owleye.dev). Credo is a rebuild of the earlier Credenstore project.

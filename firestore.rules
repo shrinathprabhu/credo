@@ -1,0 +1,46 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /store/{documentId} {
+      // Allow individual reads only if the document hasn't expired yet
+      allow get: if resource.data.expires_at > request.time;
+
+      // Block listing, updating, and deleting
+      allow list, update, delete: if false;
+
+      // Enforce strict schema on document creation
+      allow create: if request.resource.data.keys().hasOnly([
+          'encrypted_data', 'created_at', 'expires_at', 'file', 'metadata'
+        ])
+        // Required fields validation
+        && request.resource.data.encrypted_data is string
+        && request.resource.data.encrypted_data.size() > 0
+        && request.resource.data.created_at is timestamp
+
+        // Optional fields validation
+        && request.resource.data.expires_at is timestamp
+
+        && (!('file' in request.resource.data) || request.resource.data.file is bool)
+
+        // Conditional metadata validation
+        && (
+             // Case 1: file is true -> metadata is strictly required with exactly name and type
+             (
+               'file' in request.resource.data && request.resource.data.file == true
+               && 'metadata' in request.resource.data
+               && request.resource.data.metadata is map
+               && request.resource.data.metadata.keys().hasAll(['name', 'type'])
+               && request.resource.data.metadata.keys().hasOnly(['name', 'type'])
+               && request.resource.data.metadata.name is string
+               && request.resource.data.metadata.type is string
+             )
+             ||
+             // Case 2: file is false or omitted -> metadata must NOT be included
+             (
+               (!('file' in request.resource.data) || request.resource.data.file == false)
+               && !('metadata' in request.resource.data)
+             )
+           );
+    }
+  }
+}
