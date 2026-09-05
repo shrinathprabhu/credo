@@ -106,6 +106,7 @@ export function ComposeSecret() {
     setFile(null);
     setPassphrase("");
     setLabel("");
+    setPreset(DEFAULT_PRESET);
     setStepIndex(-1);
     setError(null);
     if (fileInput.current) fileInput.current.value = "";
