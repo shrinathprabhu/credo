@@ -23,7 +23,7 @@ export const SITE = {
     owleye: "https://owleye.dev",
     lowkey: "https://lowkey.tools",
     superfocus: "https://superfocus.lowkey.tools",
-    source: "https://github.com/shrinathprabhu/credenstore",
+    source: "https://github.com/shrinathprabhu/credo",
   },
   locale: "en_US",
 } as const;
