@@ -4,7 +4,7 @@ out
 build
 .wrangler
 .cloudflare-workers-build
-cloudflare-workers
+/cloudflare-workers/
 .env
 .env.local
 .env*.local
