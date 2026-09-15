@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { BASE_PATH } from "@/lib/site";
 
 /** Registers the offline shell. Failure here is never worth surfacing. */
 export function ServiceWorker() {
@@ -11,7 +10,7 @@ export function ServiceWorker() {
 
     const register = () => {
       navigator.serviceWorker
-        .register(`${BASE_PATH}/sw.js`, { scope: `${BASE_PATH}/` })
+        .register("/sw.js", { scope: "/" })
         .catch(() => {});
     };
 

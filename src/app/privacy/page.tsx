@@ -35,7 +35,7 @@ const SECTIONS = [
   },
   {
     title: "Third parties",
-    body: "Encrypted records are stored in Google Firestore and the site is served from Vercel. Neither can read the contents of a share, because what they hold is ciphertext.",
+    body: "Encrypted records are stored in Google Firestore and the site is served from Cloudflare Workers. The secret is encrypted in your browser before it is uploaded, and the passphrase is never sent to either provider.",
   },
   {
     title: "Children",

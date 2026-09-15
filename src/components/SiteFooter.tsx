@@ -65,7 +65,24 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <div className="mt-10 flex flex-col gap-3 border-t border-[var(--line)] pt-6 text-[12px] text-ink-faint sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-10 flex flex-col gap-4 border-t border-[var(--line)] pt-6 text-[13px] leading-relaxed text-ink-soft sm:flex-row sm:items-start sm:justify-between">
+          <p>
+            A little discretion from{" "}
+            <a href={SITE.credits.lowkey} target="_blank" rel="noopener" className="font-medium text-brand underline underline-offset-4">
+              lowkey.tools
+            </a>
+            . More useful tools, less fuss.
+          </p>
+          <p className="max-w-sm">
+            Secret sent. Head clear. Give your next 25 minutes to{" "}
+            <a href={SITE.credits.superfocus} target="_blank" rel="noopener" className="font-medium text-brand underline underline-offset-4">
+              SuperFocus
+            </a>
+            , our quiet corner for getting things done.
+          </p>
+        </div>
+
+        <div className="mt-6 flex flex-col gap-3 text-[12px] leading-relaxed text-ink-faint lg:flex-row lg:items-start lg:justify-between">
           <p>
             Built by{" "}
             <a
@@ -76,18 +93,26 @@ export function SiteFooter() {
             >
               Shrinath Prabhu
             </a>
-            , also one of the people behind{" "}
+            , from the makers of{" "}
             <a
               href={SITE.credits.owleye}
               className="font-medium text-ink-soft underline decoration-[var(--line-strong)] underline-offset-4 transition-colors hover:text-brand"
               rel="noopener"
               target="_blank"
             >
-              Owleye analytics
+              OwlEye Analytics
             </a>
-            .
+            .{" "}
+            <a
+              href={SITE.author.x}
+              className="text-ink-soft underline decoration-[var(--line-strong)] underline-offset-4 transition-colors hover:text-brand"
+              rel="noopener"
+              target="_blank"
+            >
+              Follow {SITE.author.xHandle}
+            </a>
           </p>
-          <p className="flex items-center gap-4">
+          <p className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <a
               href={SITE.credits.source}
               className="inline-flex items-center gap-1.5 transition-colors hover:text-brand"

@@ -1,12 +1,10 @@
-export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "/credo";
-
 /** Canonical origin. Share links and SEO tags are built from this. */
 export const SITE_ORIGIN =
-  process.env.NEXT_PUBLIC_SITE_ORIGIN?.replace(/\/$/, "") ||
-  "https://lowkey.tools";
+  process.env.NEXT_PUBLIC_SITE_ORIGIN?.replace(/\/+$/, "") ||
+  "https://credo.lowkey.tools";
 
-/** Canonical root of the app, for example https://lowkey.tools/credo */
-export const SITE_URL = `${SITE_ORIGIN}${BASE_PATH}`;
+/** Credo is served from the root of its own subdomain, so these are the same. */
+export const SITE_URL = SITE_ORIGIN;
 
 export const SITE = {
   name: "Credo",
@@ -18,29 +16,33 @@ export const SITE = {
   author: {
     name: "Shrinath Prabhu",
     url: "https://shrinath.me",
+    x: "https://x.com/shrinath_prabhu",
+    xHandle: "@shrinath_prabhu",
   },
   credits: {
     owleye: "https://owleye.dev",
+    lowkey: "https://lowkey.tools",
+    superfocus: "https://superfocus.lowkey.tools",
     source: "https://github.com/shrinathprabhu/credenstore",
   },
   locale: "en_US",
 } as const;
 
-/** Build a full URL for a route inside the app. */
+/** Build a full URL with no trailing pathname slash, preserving query and hash. */
 export function absoluteUrl(path = "/"): string {
   const clean = path.startsWith("/") ? path : `/${path}`;
-  return `${SITE_URL}${clean === "/" ? "" : clean}`;
+  const url = new URL(`${SITE_URL}${clean}`);
+  const pathname = url.pathname.replace(/\/+$/, "");
+  return `${url.origin}${pathname}${url.search}${url.hash}`;
 }
 
 /**
  * Origin used at runtime when producing a share link. Prefers the canonical
- * origin so a link created on credo.lowkey.tools still reads lowkey.tools,
- * and falls back to whatever host the browser is on during local development.
+ * origin so links always read credo.lowkey.tools, and falls back to whatever
+ * host the browser is on during local development.
  */
 export function shareBase(): string {
   if (process.env.NEXT_PUBLIC_SITE_ORIGIN) return SITE_URL;
-  if (typeof window !== "undefined") {
-    return `${window.location.origin}${BASE_PATH}`;
-  }
+  if (typeof window !== "undefined") return window.location.origin;
   return SITE_URL;
 }

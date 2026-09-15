@@ -1,24 +1,21 @@
 /**
  * Credo offline shell.
  *
- * Scope is derived from where this file is served, so the same worker works at
- * credo.lowkey.tools/credo/ and at lowkey.tools/credo/ without edits. Nothing
- * belonging to a share is ever cached: only the shell, the build output and the
- * brand assets go into storage.
+ * Nothing belonging to a share is ever cached: only the shell, the build output
+ * and the brand assets go into storage.
  */
-const VERSION = "credo-v1";
+const VERSION = "credo-v2";
 const SHELL = `${VERSION}-shell`;
 const ASSETS = `${VERSION}-assets`;
-const BASE = new URL("./", self.location).pathname.replace(/\/$/, "");
 
 const PRECACHE = [
-  `${BASE}/`,
-  `${BASE}/new`,
-  `${BASE}/open`,
-  `${BASE}/offline`,
-  `${BASE}/favicon.svg`,
-  `${BASE}/icons/icon-192.png`,
-  `${BASE}/manifest.webmanifest`,
+  "/",
+  "/new",
+  "/open",
+  "/offline",
+  "/favicon.svg",
+  "/icons/icon-192.png",
+  "/manifest.webmanifest",
 ];
 
 self.addEventListener("install", (event) => {
@@ -26,7 +23,9 @@ self.addEventListener("install", (event) => {
     caches
       .open(SHELL)
       .then((cache) =>
-        Promise.allSettled(PRECACHE.map((url) => cache.add(new Request(url, { cache: "reload" })))),
+        Promise.allSettled(
+          PRECACHE.map((url) => cache.add(new Request(url, { cache: "reload" }))),
+        ),
       )
       .then(() => self.skipWaiting()),
   );
@@ -49,16 +48,11 @@ self.addEventListener("message", (event) => {
   if (event.data === "skip-waiting") self.skipWaiting();
 });
 
-function isBuildOutput(url) {
-  return url.pathname.startsWith(`${BASE}/_next/static/`);
-}
+const isBuildOutput = (url) => url.pathname.startsWith("/_next/static/");
 
-function isBrandAsset(url) {
-  return (
-    url.pathname.startsWith(`${BASE}/icons/`) ||
-    /\.(?:png|svg|ico|webp|woff2?)$/.test(url.pathname)
-  );
-}
+const isBrandAsset = (url) =>
+  url.pathname.startsWith("/icons/") ||
+  /\.(?:png|svg|ico|webp|woff2?)$/.test(url.pathname);
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
@@ -66,7 +60,6 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  if (!url.pathname.startsWith(`${BASE}/`) && url.pathname !== BASE) return;
 
   // Hashed build output never changes under the same name.
   if (isBuildOutput(url)) {
@@ -113,7 +106,7 @@ self.addEventListener("fetch", (event) => {
         .catch(async () => {
           const cached = await caches.match(request);
           if (cached) return cached;
-          const offline = await caches.match(`${BASE}/offline`);
+          const offline = await caches.match("/offline");
           return (
             offline ||
             new Response("Credo is offline and this page was never cached.", {

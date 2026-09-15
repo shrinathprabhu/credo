@@ -8,7 +8,7 @@ import { themeBootstrap } from "@/components/theme";
 import { ToastProvider } from "@/components/ui/Toast";
 import { OG_IMAGE } from "@/lib/metadata";
 import { graph, organization, softwareApplication, website } from "@/lib/schema";
-import { BASE_PATH, SITE, SITE_ORIGIN, SITE_URL } from "@/lib/site";
+import { SITE, SITE_ORIGIN, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const inter = Inter({
@@ -56,18 +56,17 @@ export const metadata: Metadata = {
   publisher: "lowkey.tools",
   category: "security",
   alternates: { canonical: SITE_URL },
-  // Icons stay same origin so they resolve on lowkey.tools, on the bare
-  // subdomain and in local development. Only the social images are absolute,
-  // because crawlers fetch those from somewhere else entirely.
-  manifest: `${BASE_PATH}/manifest.webmanifest`,
+  // Icons stay same origin so they resolve in local development too. Only the
+  // social images are absolute, because crawlers fetch those from elsewhere.
+  manifest: "/manifest.webmanifest",
   icons: {
     icon: [
-      { url: `${BASE_PATH}/favicon.svg`, type: "image/svg+xml" },
-      { url: `${BASE_PATH}/favicon.ico`, sizes: "48x48" },
-      { url: `${BASE_PATH}/icons/icon-192.png`, sizes: "192x192", type: "image/png" },
-      { url: `${BASE_PATH}/icons/icon-512.png`, sizes: "512x512", type: "image/png" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: `${BASE_PATH}/apple-touch-icon.png`, sizes: "180x180" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
   robots: {
     index: true,
@@ -91,6 +90,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
+    creator: SITE.author.xHandle,
     title: `${SITE.name}, zero knowledge sharing`,
     description: SITE.shortDescription,
     images: [OG_IMAGE.url],

@@ -63,12 +63,12 @@ async function main() {
   const og = await readFile(join(pub, "og-source.svg"));
   jobs.push([
     join(pub, "og.png"),
-    await sharp(og, { density: 144 }).png({ compressionLevel: 9 }).toBuffer(),
+    await sharp(og, { density: 144 }).resize(1200, 630).png({ compressionLevel: 9 }).toBuffer(),
   ]);
   const ogSquare = await readFile(join(pub, "og-square-source.svg"));
   jobs.push([
     join(pub, "og-square.png"),
-    await sharp(ogSquare, { density: 144 }).png({ compressionLevel: 9 }).toBuffer(),
+    await sharp(ogSquare, { density: 144 }).resize(630, 630).png({ compressionLevel: 9 }).toBuffer(),
   ]);
 
   for (const [path, data] of jobs) {

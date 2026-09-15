@@ -1,16 +1,16 @@
-import { SITE, SITE_ORIGIN, SITE_URL, absoluteUrl } from "./site";
+import { SITE, SITE_URL, absoluteUrl } from "./site";
 
 export const organization = {
   "@type": "Organization",
   "@id": `${SITE_URL}#publisher`,
   name: "lowkey.tools",
-  url: SITE_ORIGIN,
+  url: SITE.credits.lowkey,
   logo: absoluteUrl("/icons/icon-512.png"),
   founder: {
     "@type": "Person",
     name: SITE.author.name,
     url: SITE.author.url,
-    sameAs: [SITE.author.url, SITE.credits.owleye],
+    sameAs: [SITE.author.x],
   },
 };
 

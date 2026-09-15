@@ -1,0 +1,15 @@
+# Workers Static Assets and the production custom domain.
+name = "credo"
+main = "hosting/worker.mjs"
+compatibility_date = "2026-09-15"
+
+[[routes]]
+pattern = "credo.lowkey.tools"
+custom_domain = true
+
+[assets]
+directory = "./cloudflare-workers"
+binding = "ASSETS"
+run_worker_first = true
+html_handling = "none"
+not_found_handling = "none"

@@ -7,7 +7,7 @@ AES-256-GCM, uploads nothing but the ciphertext, and hands back a link plus a QR
 that expire on a schedule you choose. There is no account, no server that can read a
 share, and no way to recover a lost passphrase.
 
-Live at **https://lowkey.tools/credo**
+Live at **https://credo.lowkey.tools**
 
 This is a ground up rebuild of [Credenstore](https://github.com/shrinathprabhu/credenstore),
 with modern browser cryptography, a new interface and a local history of the links you
@@ -41,7 +41,7 @@ The passphrase is never transmitted, never stored, and never part of the link.
 | Storage | Firebase Firestore, client SDK only, loaded on demand |
 | Local history | IndexedDB with a localStorage fallback |
 | Icons | lucide-react |
-| Hosting | Vercel |
+| Hosting | Cloudflare Workers |
 
 There is no backend of our own. The browser talks straight to Firestore, and the
 Firestore rules are the only thing enforcing the schema and the expiry.
@@ -90,14 +90,18 @@ cp .env.example .env.local   # then fill in the Firebase values
 npm run dev
 ```
 
-The app runs at http://localhost:3000/credo because the base path is `/credo` by
-default. See [Routing](#routing-and-the-two-hostnames) for why.
+The app runs at http://localhost:3000. All routes and assets are served from the
+origin root, just as they are on the production subdomain.
 
 | Script | What it does |
 | --- | --- |
 | `npm run dev` | Development server |
-| `npm run build` | Production build |
-| `npm start` | Serve the production build |
+| `npm run build` | Production Workers build |
+| `npm run build:workers` | Build static assets in `cloudflare-workers/` for the Worker |
+| `npm run check:workers` | Worker routing, headers, caching and failure checks |
+| `npm run preview:workers` | Preview the built app in the local Workers runtime |
+| `npm run deploy:workers` | Deploy the built app with the pinned Wrangler CLI |
+| `npm start` | Preview the Workers production build locally |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | TypeScript, no emit |
 | `npm test` | Encryption round trips, tamper and wrong passphrase cases, and the expiry ceiling |
@@ -118,8 +122,7 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
 NEXT_PUBLIC_FIREBASE_APP_ID
 NEXT_PUBLIC_FIRESTORE_DATABASE_ID   # optional, only for a non default database
-NEXT_PUBLIC_BASE_PATH               # defaults to /credo
-NEXT_PUBLIC_SITE_ORIGIN             # https://lowkey.tools
+NEXT_PUBLIC_SITE_ORIGIN             # https://credo.lowkey.tools
 ```
 
 Without the Firebase values the app still loads and still encrypts locally. It shows a
@@ -169,127 +172,107 @@ in the browser instead of on the server.
 
 ---
 
-## Routing and the two hostnames
+## Routing
 
-Credo answers on two addresses:
+Credo lives at **https://credo.lowkey.tools**. Pages such as `/new`, `/open` and
+`/s/[id]`, assets under `/_next/static/`, and metadata routes all start at the
+origin root. There is no base path, asset prefix or proxy rewrite.
 
-| Address | What it is |
-| --- | --- |
-| `lowkey.tools/credo` | the canonical one, what links and QR codes point at |
-| `credo.lowkey.tools` | the Vercel deployment, fully usable on its own at the root |
-
-Links, assets and metadata routes are all emitted under `/credo`, which is what the
-`basePath` in `next.config.ts` does. That matters more here than it would in a Vite app:
-in the App Router the prefix is baked into prerendered `href`s and into the `.rsc`
-payloads the client router uses for navigation, so it cannot be reinterpreted at runtime
-the way a router `basename` can. One prefix in the markup is what lets the same response
-be correct on either host without rewriting response bodies.
-
-`vercel.json` then serves the app from the root of its own subdomain:
-
-```json
-{
-  "rewrites": [
-    { "source": "/", "destination": "/credo" },
-    { "source": "/:path((?!credo$|credo/).*)", "destination": "/credo/:path" }
-  ]
-}
-```
-
-So `credo.lowkey.tools/` and `credo.lowkey.tools/new` both work, while
-`/credo/_next/...`, `/credo/favicon.ico` and every other asset resolve natively. The
-negative lookahead is what stops `/credo/x` from being rewritten to `/credo/credo/x`.
-
-There is deliberately **no redirect from `/`** in `next.config.ts`, and adding one back
-will break the site with `ERR_TOO_MANY_REDIRECTS`. Next emits a relative `Location`, so a
-`/` to `/credo` redirect on the subdomain resolves against whichever host the visitor is
-actually on. Behind a prefix stripping proxy that is `lowkey.tools/credo`, which proxies
-straight back to the subdomain root, which redirects again. Redirects also run before
-rewrites on Vercel, so the redirect would win and the rewrite above would never fire.
-
-Note that `next start` does not read `vercel.json`, so in local development the app is at
-`localhost:3000/credo` and bare paths 404. That is expected and does not happen on Vercel.
-
-### Add this to the lowkey.tools project
-
-Either shape works, because the subdomain answers on both. Path preserving has the fewest
-moving parts, since the request reaches the app without passing through the subdomain's
-own rewrites:
-
-```json
-{
-  "rewrites": [
-    { "source": "/credo", "destination": "https://credo.lowkey.tools/credo" },
-    { "source": "/credo/:path*", "destination": "https://credo.lowkey.tools/credo/:path*" }
-  ]
-}
-```
-
-Prefix stripping also works:
-
-```json
-{
-  "rewrites": [
-    { "source": "/credo", "destination": "https://credo.lowkey.tools/" },
-    { "source": "/credo/:path*", "destination": "https://credo.lowkey.tools/:path*" }
-  ]
-}
-```
-
-Or, if lowkey.tools is itself a Next.js app, the same two entries belong in
-`next.config.ts` under `rewrites()`.
-
-Three things that will break it:
-
-1. **Rewrite, never redirect.** A redirect bounces visitors onto the subdomain and the
-   canonical address stops being the one they see.
-2. **Never redirect `/` to `/credo` inside the Credo app.** With a prefix stripping proxy
-   that is an infinite loop, and it presents as `ERR_TOO_MANY_REDIRECTS` on
-   `lowkey.tools/credo`. See the note above.
-3. **Do not add a trailing slash variant.** Next normalises those itself and returns a
-   relative `Location`, so `lowkey.tools/credo/faq/` lands on `lowkey.tools/credo/faq`
-   rather than leaking the subdomain into the address bar.
-
-### If you ever want the subdomain to be primary
-
-The prefix is a deploy time decision, not something baked into the source:
-
-```bash
-NEXT_PUBLIC_BASE_PATH=""
-NEXT_PUBLIC_SITE_ORIGIN="https://credo.lowkey.tools"
-```
-
-The app then serves cleanly at the subdomain root with correct links, canonical tags and
-share URLs, and the `vercel.json` rewrites can be dropped.
+`hosting/policy.mjs` owns security headers, cache rules and the original
+Credenstore redirects. `next.config.ts` applies them during local development;
+`hosting/worker.mjs` applies them in production. `npm run build` builds the Workers
+assets, and `npm start` previews them locally with Wrangler.
 
 ### robots.txt
 
-Crawlers only read `/robots.txt` at the root of a host, and that file belongs to the
-lowkey.tools project. Credo serves its own copy at `/credo/robots.txt` for reference,
-but the rules that matter need merging into the root one:
+Credo serves its own crawler rules at `https://credo.lowkey.tools/robots.txt`:
 
-```
-Disallow: /credo/s/
-Disallow: /credo/links
-Sitemap: https://lowkey.tools/credo/sitemap.xml
+```text
+User-Agent: *
+Allow: /
+Disallow: /s/
+Disallow: /links
+Disallow: /offline
+Sitemap: https://credo.lowkey.tools/sitemap.xml
 ```
 
-`/credo/s/` holds share pages and `/credo/links` is a purely local view, so neither
-belongs in an index. Nothing readable is exposed either way.
+Share pages, local link history and the offline fallback are excluded from the
+sitemap and marked noindex. Public pages have canonical URLs, social metadata
+and structured data on the Credo subdomain.
 
 ---
 
 ## Deploying
 
-Push to the repository connected to the Vercel project, or:
+### Cloudflare Workers
+
+Credo uses [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/)
+with a small Worker that handles routing and response headers. Encryption and
+Firestore access continue to run in the browser, so no Next.js server adapter,
+KV, D1 or R2 binding is needed.
+
+Connect this repository to **Workers Builds**, and use these settings:
+
+| Setting | Value |
+| --- | --- |
+| Worker name | `credo` (matches `wrangler.toml`) |
+| Root directory | Repository root |
+| Build command | `npm run build:workers` |
+| Deploy command | `npm run deploy:workers` |
+| Non-production branch deploy command, if enabled | `npx wrangler versions upload` |
+| `NODE_VERSION` | `24` |
+| `NEXT_PUBLIC_SITE_ORIGIN` | `https://credo.lowkey.tools` |
+| Firebase build variables | The same `NEXT_PUBLIC_FIREBASE_*` values listed above; optionally `NEXT_PUBLIC_FIRESTORE_DATABASE_ID` |
+
+The output directory is configured as `cloudflare-workers` in `wrangler.toml`;
+there is no Pages framework preset or Pages output-directory setting.
+Set public environment variables in the **build** environment. These values are
+compiled into the client bundle, so changing them requires a rebuild. Adding
+runtime Worker variables alone will not update them. The build downloads Google
+Fonts and needs network access. Wrangler is pinned in `package-lock.json`.
+
+For local development of the deployment and an explicit upload:
 
 ```bash
-vercel --prod
+npm ci
+npm run build:workers
+npm run preview:workers
+# When ready to publish (requires Cloudflare authentication):
+npm run deploy:workers
 ```
 
-Set the environment variables in the Vercel project settings and point
-`credo.lowkey.tools` at it. `vercel.json` and `next.config.ts` carry everything else:
-the base path, the redirects, the cache headers and the security headers.
+`wrangler.toml` declares the production hostname:
+
+```toml
+[[routes]]
+pattern = "credo.lowkey.tools"
+custom_domain = true
+```
+
+`npm run deploy:workers` applies this custom domain when deploying to the account
+that owns the active `lowkey.tools` Cloudflare zone. Cloudflare manages the domain's
+DNS record and certificate. If an old CNAME already occupies this hostname, resolve
+that conflict before deploying. See [Cloudflare's Custom Domains documentation](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
+The build and local preview do not attach the domain or change DNS.
+
+The build stages a copy in `.cloudflare-workers-build/`, replaces only that
+copy's dynamic share route with a static `/s` page, then exports it. The Worker
+serves this shell for `/s/:id` without changing the visible address. The browser
+reads the ID and opens the existing passphrase form. Existing links and QR codes
+keep their format. Local Next.js development uses the dynamic route.
+
+`hosting/worker.mjs` imports `hosting/policy.mjs`, the same security and cache
+policy used in local development. `run_worker_first = true` ensures headers are attached to
+pages, assets, redirects, and errors. The Worker serves a real 404 for unknown
+paths, normalizes trailing slashes, preserves legacy redirects, handles HEAD and
+conditional requests, and marks share pages and `workers.dev` URLs noindex.
+Share responses use `Cache-Control: no-store`. No Pages `_headers` or `_redirects`
+files are generated or required.
+
+Before attaching the domain, check `/`, `/new`, `/faq`, `/robots.txt`,
+`/sitemap.xml`, `/manifest.webmanifest`, `/sw.js`, a nonexistent route, and an
+existing `/s/:id` link in the Workers preview. Confirm the ID is populated and
+that security headers and the worker's no-cache policy are present.
 
 ### Caching
 
@@ -298,15 +281,16 @@ the base path, the redirects, the cache headers and the security headers.
 - Manifest, robots, sitemap and `llms.txt`: one hour, with a day of
   stale-while-revalidate.
 - `sw.js`: never cached, so a deploy is picked up on the next visit.
-- Pages are statically prerendered. `/credo/s/[id]` renders the same shell for every
-  id, so the first request for an id generates it and the CDN keeps it from then on.
+- All share URLs use one exported shell on Cloudflare Workers. Encrypted records
+  are fetched in the browser and are never embedded in the HTML.
 
 ### Security headers
 
-`next.config.ts` sets a Content Security Policy that allows connections only to the app
+`hosting/policy.mjs` defines a Content Security Policy that allows connections only to the app
 itself and to Firestore, blocks framing except from lowkey.tools, and turns off camera,
 microphone and geolocation. Also `X-Content-Type-Options`, a strict referrer policy and
-HSTS.
+HSTS. Next.js applies it during local development; the Worker applies it to
+production responses.
 
 ---
 
@@ -317,7 +301,7 @@ the content is written to be quotable and the machine readable layer is delibera
 
 - JSON-LD for `Organization`, `WebSite`, `SoftwareApplication`, `HowTo`, `FAQPage`,
   `TechArticle` and `BreadcrumbList`.
-- An `/credo/llms.txt` summary for assistants that look for one.
+- An `/llms.txt` summary for assistants that look for one.
 - A sitemap, per page canonical tags, and Open Graph plus Twitter card images.
 - A PWA manifest with shortcuts, maskable icons and an offline shell.
 - FAQ answers written as complete, self contained statements, so an answer engine can
@@ -352,7 +336,7 @@ tests/
 
 ## What this does not protect you from
 
-Covered in full on the [security page](https://lowkey.tools/credo/security), but in
+Covered in full on the [security page](https://credo.lowkey.tools/security), but in
 short: a weak passphrase, sending the link and the passphrase in the same thread, a
 compromised browser, and the fact that a link works as many times as needed until it
 expires because the rules block writes after creation.
@@ -362,6 +346,7 @@ expires because the rules block writes after creation.
 ## Credits
 
 Built by [Shrinath Prabhu](https://shrinath.me), who also works on
-[Owleye analytics](https://owleye.dev).
+[OwlEye Analytics](https://owleye.dev). Part of [lowkey.tools](https://lowkey.tools).
+Secret sent? Find your next quiet focus session at [SuperFocus](https://superfocus.lowkey.tools).
 
 MIT licensed, same as the original Credenstore.
