@@ -4,7 +4,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { PageHeader, Shell } from "@/components/PageHeader";
 import { pageMetadata } from "@/lib/metadata";
 import { breadcrumbs, graph } from "@/lib/schema";
-import { SITE_URL, absoluteUrl } from "@/lib/site";
+import { SITE, SITE_URL, absoluteUrl } from "@/lib/site";
 
 export const metadata = pageMetadata({
   title: "Security model",
@@ -200,14 +200,14 @@ export default function SecurityPage() {
           <h2 className="mt-8 text-lg font-semibold text-ink">Reporting something</h2>
           <p className="mt-2.5 text-[13.5px] leading-relaxed text-ink-soft">
             If you find a flaw, please report it rather than publishing it first. The
-            fastest route is a message through{" "}
+            fastest route is to message me on X at{" "}
             <a
-              href="https://shrinath.me"
+              href={SITE.author.x}
               target="_blank"
               rel="noopener"
               className="font-medium text-brand hover:opacity-80"
             >
-              shrinath.me
+              {SITE.author.xHandle}
             </a>
             . Fixes are shipped quietly and quickly.
           </p>
