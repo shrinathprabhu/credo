@@ -32,7 +32,9 @@ export function HeroSeal() {
   const phase = useRef<"typing" | "holding">("typing");
 
   useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const sample = SAMPLES[index % SAMPLES.length];
+    let advance = 0;
     let cursor = 0;
     phase.current = "typing";
 
@@ -42,14 +44,18 @@ export function HeroSeal() {
       setTyped(sample.slice(0, cursor));
       if (cursor >= sample.length) {
         phase.current = "holding";
-        window.setTimeout(() => setIndex((value) => value + 1), 2600);
+        advance = window.setTimeout(() => setIndex((value) => value + 1), 2600);
       }
     }, 42);
 
-    return () => window.clearInterval(typer);
+    return () => {
+      window.clearInterval(typer);
+      window.clearTimeout(advance);
+    };
   }, [index]);
 
   useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const shuffle = window.setInterval(() => setCipher(scrambled(96)), 110);
     return () => window.clearInterval(shuffle);
   }, []);
@@ -62,7 +68,8 @@ export function HeroSeal() {
           In your browser
         </div>
         <p className="mt-3 min-h-[3.5rem] font-mono text-[13px] leading-relaxed break-all text-ink">
-          {typed}
+          <span className="motion-reduce:hidden">{typed}</span>
+          <span className="hidden motion-reduce:inline">{SAMPLES[0]}</span>
           <span
             className="ml-0.5 inline-block h-[1.05em] w-[2px] translate-y-[0.18em] bg-brand"
             style={{ animation: "credo-pulse 1s steps(2) infinite" }}

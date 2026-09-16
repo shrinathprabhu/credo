@@ -111,9 +111,41 @@ async function argon2Key(
   salt: Uint8Array,
   params: { m: number; t: number; p: number },
 ): Promise<CryptoKey> {
-  const { argon2id } = await import("@noble/hashes/argon2.js");
-  const raw = argon2id(normalise(passphrase), salt, { ...params, dkLen: KEY_BYTES });
-  return importAesKey(raw);
+  let raw: Uint8Array;
+  if (typeof window !== "undefined") {
+    // A promise alone does not move Argon2's CPU work off the UI thread.
+    raw = await new Promise<Uint8Array>((resolve, reject) => {
+      const worker = new Worker(new URL("./argon2.worker.ts", import.meta.url), { type: "module" });
+      worker.onmessage = (event: MessageEvent<{ key?: Uint8Array; error?: string }>) => {
+        worker.terminate();
+        if (event.data.key) resolve(event.data.key);
+        else reject(new Error(event.data.error || "Could not derive the encryption key."));
+      };
+      worker.onerror = () => {
+        worker.terminate();
+        reject(new Error("The encryption worker could not start. Reload the page and try again."));
+      };
+      worker.onmessageerror = () => {
+        worker.terminate();
+        reject(new Error("The encryption worker returned an unreadable response."));
+      };
+      try {
+        worker.postMessage({ passphrase, salt, params });
+      } catch (error) {
+        worker.terminate();
+        reject(error);
+      }
+    });
+  } else {
+    // Node-based compatibility tests use the same implementation and parameters.
+    const { argon2id } = await import("@noble/hashes/argon2.js");
+    raw = argon2id(normalise(passphrase), salt, { ...params, dkLen: KEY_BYTES });
+  }
+  try {
+    return await importAesKey(raw);
+  } finally {
+    raw.fill(0);
+  }
 }
 
 /** Version 1 only. Kept so nothing sealed by an earlier build becomes garbage. */

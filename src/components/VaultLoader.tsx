@@ -11,6 +11,7 @@ function Scramble({ width = 28 }: { width?: number }) {
   const frame = useRef(0);
 
   useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let raf = 0;
     let last = 0;
     const tick = (time: number) => {

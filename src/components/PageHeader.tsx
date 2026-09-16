@@ -29,10 +29,10 @@ export function PageHeader({
 
 export function Shell({ children, narrow = false }: { children: ReactNode; narrow?: boolean }) {
   return (
-    <div className="relative">
+    <div className="relative min-h-[calc(100svh-4rem)]">
       <div className="bg-grid pointer-events-none absolute inset-x-0 top-0 h-64" aria-hidden />
       <div
-        className={`relative mx-auto w-full px-4 pt-12 pb-8 sm:px-6 ${
+        className={`relative mx-auto w-full min-w-0 px-4 pt-12 pb-8 sm:px-6 ${
           narrow ? "max-w-2xl" : "max-w-3xl"
         }`}
       >

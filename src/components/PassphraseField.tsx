@@ -66,17 +66,17 @@ export function PassphraseField({
           className="min-w-0 flex-1 bg-transparent py-3 font-mono text-sm text-ink outline-none placeholder:font-sans placeholder:text-ink-faint"
         />
 
-        {value ? (
-          <button
-            type="button"
-            onClick={() => copy(value, value, "Passphrase copied. Send it separately from the link.")}
-            className="grid size-8 shrink-0 place-items-center rounded-lg text-ink-faint transition-colors hover:bg-surface hover:text-ink"
-            aria-label="Copy passphrase"
-            title="Copy passphrase"
-          >
-            {copied ? <Check size={15} className="text-brand" /> : <Copy size={15} />}
-          </button>
-        ) : null}
+        <button
+          type="button"
+          disabled={!value}
+          style={{ visibility: value ? "visible" : "hidden" }}
+          onClick={() => copy(value, value, "Passphrase copied. Send it separately from the link.")}
+          className="grid size-8 shrink-0 place-items-center rounded-lg text-ink-faint transition-colors hover:bg-surface hover:text-ink"
+          aria-label="Copy passphrase"
+          title="Copy passphrase"
+        >
+          {copied ? <Check size={15} className="text-brand" /> : <Copy size={15} />}
+        </button>
 
         {allowGenerate ? (
           <button
@@ -127,13 +127,12 @@ export function PassphraseField({
         </div>
       ) : null}
 
-      {error ? (
-        <p className="mt-2 text-[12px] text-danger">{error}</p>
-      ) : capsOn ? (
-        <p className="mt-2 text-[12px] text-warn">Caps lock is on.</p>
-      ) : showStrength && value ? (
-        <p className="mt-2 text-[12px] text-ink-faint">{strength.hint}</p>
-      ) : null}
+      <p
+        aria-live="polite"
+        className={`mt-2 min-h-9 text-[12px] ${error ? "text-danger" : capsOn ? "text-warn" : "text-ink-faint"}`}
+      >
+        {error || (capsOn ? "Caps lock is on." : showStrength ? strength.hint : "")}
+      </p>
     </div>
   );
 }

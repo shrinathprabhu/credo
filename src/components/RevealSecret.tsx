@@ -42,7 +42,7 @@ type Revealed =
   | { kind: "text"; text: string; expiresAt: number }
   | { kind: "file"; name: string; type: string; bytes: Uint8Array; url: string; expiresAt: number };
 
-export function RevealSecret({ initialId = "" }: { initialId?: string }) {
+export function RevealSecret({ initialId = "", fromLink = false }: { initialId?: string; fromLink?: boolean }) {
   const toast = useToast();
   const [id, setId] = useState(initialId);
   const [passphrase, setPassphrase] = useState("");
@@ -55,7 +55,7 @@ export function RevealSecret({ initialId = "" }: { initialId?: string }) {
   const objectUrl = useRef<string | null>(null);
 
   const busy = stepIndex >= 0;
-  const locked = Boolean(initialId);
+  const locked = fromLink || Boolean(initialId);
 
   useEffect(
     () => () => {
@@ -268,7 +268,7 @@ export function RevealSecret({ initialId = "" }: { initialId?: string }) {
                 <a
                   href={revealed.url}
                   download={revealed.name}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-medium text-[var(--brand-ink)] transition-all hover:brightness-110"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-brand px-5 text-sm font-medium text-[var(--brand-ink)] transition hover:brightness-110"
                 >
                   <Download size={16} />
                   Save the file
@@ -326,7 +326,7 @@ export function RevealSecret({ initialId = "" }: { initialId?: string }) {
     <>
       <VaultLoader open={busy} title="Opening the vault" steps={steps} flavour={flavour} />
 
-      <div className="card panel-glow p-5 sm:p-6">
+      <div className="card page-enter panel-glow p-5 sm:p-6">
         <div>
           <Label htmlFor="share-id" hint={locked ? "From your link" : "Or paste the whole link"}>
             Share id

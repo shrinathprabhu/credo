@@ -157,7 +157,7 @@ export function ComposeSecret() {
       await sleep(120);
 
       setStepIndex(2);
-      // Yield a frame so the dial repaints before the key stretch blocks it.
+      // Let the progress state paint before starting the background worker.
       await sleep(60);
       const envelope = await seal(bytes, passphrase);
 
@@ -228,7 +228,7 @@ export function ComposeSecret() {
         </div>
       ) : null}
 
-      <div className="card panel-glow p-5 sm:p-6">
+      <div className="card page-enter panel-glow p-5 sm:p-6">
         {/* -------------------------------------------------- mode switcher */}
         <div
           className="inline-flex rounded-full border border-[var(--line)] bg-surface-2 p-1"
@@ -247,7 +247,7 @@ export function ComposeSecret() {
               role="tab"
               aria-selected={mode === value}
               onClick={() => setMode(value)}
-              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] font-medium transition-all ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] font-medium transition ${
                 mode === value
                   ? "bg-brand text-[var(--brand-ink)]"
                   : "text-ink-soft hover:text-ink"
@@ -260,7 +260,7 @@ export function ComposeSecret() {
         </div>
 
         {/* -------------------------------------------------------- payload */}
-        <div className="mt-5">
+        <div className="mt-5 min-h-72">
           {mode === "text" ? (
             <>
               <Label
@@ -380,7 +380,7 @@ export function ComposeSecret() {
                 type="button"
                 title={option.note}
                 onClick={() => setPreset(option.id)}
-                className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-all ${
+                className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition ${
                   preset === option.id
                     ? "border-brand bg-[var(--brand-soft)] text-brand"
                     : "border-[var(--line)] bg-surface-2 text-ink-soft hover:border-[var(--line-strong)] hover:text-ink"
@@ -392,7 +392,7 @@ export function ComposeSecret() {
             <button
               type="button"
               onClick={() => setPreset("custom")}
-              className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-all ${
+              className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition ${
                 preset === "custom"
                   ? "border-brand bg-[var(--brand-soft)] text-brand"
                   : "border-[var(--line)] bg-surface-2 text-ink-soft hover:border-[var(--line-strong)] hover:text-ink"

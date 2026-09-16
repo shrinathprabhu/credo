@@ -2,7 +2,7 @@ import coreWebVitals from "eslint-config-next/core-web-vitals";
 import typescript from "eslint-config-next/typescript";
 
 const config = [
-  { ignores: [".next/**", ".cloudflare-workers-build/**", "cloudflare-workers/**", "node_modules/**", "public/sw.js", "tests/**"] },
+  { ignores: [".next/**", ".wrangler/**", ".cloudflare-workers-build/**", "cloudflare-workers/**", "node_modules/**", "public/sw.js", "tests/**"] },
   ...coreWebVitals,
   ...typescript,
   {

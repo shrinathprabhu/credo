@@ -57,7 +57,7 @@ export function LinkVault() {
 
   if (links === null) {
     return (
-      <div className="space-y-3" aria-busy>
+      <div className="min-h-80 space-y-3" aria-busy>
         {[0, 1, 2].map((index) => (
           <div key={index} className="sweep relative h-20 overflow-hidden rounded-2xl bg-surface-2" />
         ))}
@@ -67,7 +67,7 @@ export function LinkVault() {
 
   if (links.length === 0) {
     return (
-      <div className="card p-8 text-center sm:p-12">
+      <div className="card page-enter min-h-80 p-8 text-center sm:p-12">
         <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-surface-2 text-ink-faint">
           <Inbox size={22} />
         </span>
@@ -79,7 +79,7 @@ export function LinkVault() {
         <div className="mt-7">
           <Link
             href="/new"
-            className="inline-flex h-11 items-center gap-2 rounded-full bg-brand px-5 text-sm font-medium text-[var(--brand-ink)] transition-all hover:brightness-110"
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-brand px-5 text-sm font-medium text-[var(--brand-ink)] transition hover:brightness-110"
           >
             Share your first secret
             <ArrowRight size={16} />

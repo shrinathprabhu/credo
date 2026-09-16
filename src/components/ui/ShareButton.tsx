@@ -6,8 +6,8 @@ import { useClientFlag } from "@/lib/use-client-flag";
 import { useToast } from "./Toast";
 
 /**
- * Renders nothing where the share sheet does not exist, so the copy button is
- * never sitting next to a control that cannot do anything.
+ * Reserve the button's space while capabilities hydrate. Unsupported controls
+ * stay invisible and unfocusable without moving the neighbouring buttons.
  */
 export function ShareButton({
   url,
@@ -27,11 +27,11 @@ export function ShareButton({
   const toast = useToast();
   const available = useClientFlag(canShareLink);
 
-  if (!available) return null;
-
   return (
     <button
       type="button"
+      disabled={!available}
+      style={{ visibility: available ? "visible" : "hidden" }}
       onClick={async () => {
         const outcome = await shareLink({ url, title, text });
         if (outcome === "failed") {

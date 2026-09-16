@@ -28,7 +28,7 @@ export function ThemeToggle() {
             aria-checked={active}
             title={`${label} theme`}
             onClick={() => setChoice(value)}
-            className={`grid size-7 place-items-center rounded-full transition-all ${
+            className={`grid size-7 place-items-center rounded-full transition ${
               active
                 ? "bg-brand text-[var(--brand-ink)]"
                 : "text-ink-faint hover:text-ink"

@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "assets": "node scripts/generate-assets.mjs",
-    "test": "node --experimental-strip-types tests/crypto.test.mts && node --experimental-strip-types tests/expiry.test.mts",
+    "test": "node --experimental-strip-types tests/crypto.test.mts && node --experimental-strip-types tests/crypto-worker.test.mts && node --experimental-strip-types tests/expiry.test.mts",
     "build:workers": "node scripts/build-workers.mjs",
     "check:workers": "node --experimental-strip-types --test tests/workers.test.mts",
     "preview:workers": "wrangler dev",

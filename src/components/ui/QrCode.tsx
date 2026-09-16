@@ -58,24 +58,17 @@ export function QrCode({
     };
   }, [value]);
 
-  if (failed) {
-    return (
-      <div
-        className="flex items-center justify-center rounded-2xl border border-dashed border-[var(--line-strong)] p-4 text-center text-[12px] text-ink-faint"
-        style={{ width: size, height: size }}
-      >
-        The code could not be drawn. The link above still works.
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="flex shrink-0 flex-col items-center gap-3" style={{ width: size }}>
       <div
         className="relative overflow-hidden rounded-2xl bg-white p-2.5 shadow-[0_18px_50px_-30px_rgb(0_0_0/0.8)]"
         style={{ width: size, height: size }}
       >
-        {src ? (
+        {failed ? (
+          <p role="status" className="grid size-full place-items-center p-2 text-center text-[12px] text-[#495a53]">
+            The code could not be drawn. The link above still works.
+          </p>
+        ) : src ? (
           <img
             src={src}
             alt="QR code for the Credo share link"
@@ -88,40 +81,40 @@ export function QrCode({
         )}
       </div>
 
-      {src ? (
-        <div className="flex items-center gap-4">
-          {showDownload ? (
-            <a
-              href={src}
-              download={fileName}
-              onClick={() => toast("Saving the code as a PNG", "info")}
-              className="inline-flex items-center gap-1.5 text-[12px] font-medium text-ink-soft transition-colors hover:text-brand"
-            >
-              <Download size={13} />
-              Save the code
-            </a>
-          ) : null}
+      <div className="flex min-h-12 w-full flex-col items-center gap-2">
+        {showDownload ? (
+          <a
+            href={src ?? undefined}
+            style={{ visibility: src ? "visible" : "hidden" }}
+            download={fileName}
+            onClick={() => toast("Saving the code as a PNG", "info")}
+            className="inline-flex items-center gap-1.5 text-[12px] font-medium text-ink-soft transition-colors hover:text-brand"
+          >
+            <Download size={13} />
+            Save the code
+          </a>
+        ) : null}
 
-          {canShare ? (
-            <button
-              type="button"
-              onClick={async () => {
-                const outcome = await shareImage(src, fileName, {
-                  title: "A secret shared with Credo",
-                  text: "Scan this, then use the passphrase I sent you separately.",
-                });
-                if (outcome === "failed" || outcome === "unsupported") {
-                  toast("Sharing the image did not work here. Save it instead.", "error");
-                }
-              }}
-              className="inline-flex items-center gap-1.5 text-[12px] font-medium text-ink-soft transition-colors hover:text-brand"
-            >
-              <Share2 size={13} />
-              Share the code
-            </button>
-          ) : null}
-        </div>
-      ) : null}
+        <button
+          type="button"
+          disabled={!src || !canShare}
+          style={{ visibility: src && canShare ? "visible" : "hidden" }}
+          onClick={async () => {
+            if (!src) return;
+            const outcome = await shareImage(src, fileName, {
+              title: "A secret shared with Credo",
+              text: "Scan this, then use the passphrase I sent you separately.",
+            });
+            if (outcome === "failed" || outcome === "unsupported") {
+              toast("Sharing the image did not work here. Save it instead.", "error");
+            }
+          }}
+          className="inline-flex items-center gap-1.5 text-[12px] font-medium text-ink-soft transition-colors hover:text-brand"
+        >
+          <Share2 size={13} />
+          Share the code
+        </button>
+      </div>
     </div>
   );
 }
